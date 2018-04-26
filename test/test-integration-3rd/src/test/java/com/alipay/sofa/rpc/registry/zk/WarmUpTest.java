@@ -22,9 +22,12 @@ import com.alipay.sofa.rpc.config.ConsumerConfig;
 import com.alipay.sofa.rpc.config.ProviderConfig;
 import com.alipay.sofa.rpc.config.RegistryConfig;
 import com.alipay.sofa.rpc.config.ServerConfig;
+import com.alipay.sofa.rpc.context.RpcRuntimeContext;
 import com.alipay.sofa.rpc.test.ActivelyDestroyTest;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.lang.reflect.Field;
 
 /**
  *
@@ -34,6 +37,7 @@ public class WarmUpTest extends ActivelyDestroyTest {
 
     @Test
     public void testWarmUp() throws InterruptedException, NoSuchFieldException, IllegalAccessException {
+
         RegistryConfig registryConfig = new RegistryConfig()
             .setProtocol("zookeeper")
             .setAddress("127.0.0.1:2181");
@@ -46,7 +50,7 @@ public class WarmUpTest extends ActivelyDestroyTest {
             .setRef(new WarmUpServiceImpl(22222))
             .setServer(serverConfig)
             .setRegistry(registryConfig)
-            .setParameter(ProviderInfoAttrs.ATTR_WARMUP_TIME, "1500")
+            .setParameter(ProviderInfoAttrs.ATTR_WARMUP_TIME, "2000")
             .setParameter(ProviderInfoAttrs.ATTR_WARMUP_WEIGHT, "100")
             .setWeight(0);
 
@@ -60,8 +64,14 @@ public class WarmUpTest extends ActivelyDestroyTest {
             .setRegistry(registryConfig)
             .setWeight(0);
 
+        // Mock start time
+        long startTime = System.currentTimeMillis();
+        Field field = RpcRuntimeContext.class.getDeclaredField("startTime");
+        field.setAccessible(true);
+        field.setLong(null, startTime);
+        Assert.assertEquals(startTime, RpcRuntimeContext.startTime());
+
         providerConfig.export();
-        long st = System.currentTimeMillis();
         providerConfig2.export();
 
         ConsumerConfig<WarmUpService> consumerConfig = new ConsumerConfig<WarmUpService>()
@@ -70,15 +80,15 @@ public class WarmUpTest extends ActivelyDestroyTest {
             .setProtocol(RpcConstants.PROTOCOL_TYPE_BOLT);
         WarmUpService warmUpService = consumerConfig.refer();
 
-        // Before the 1500 ms, all the traffic goes to 22222.
+        // Before the 2000 ms, all the traffic goes to 22222.
         for (int i = 0; i < 10; i++) {
             Assert.assertEquals(22222, warmUpService.getPort());
         }
 
         long et = System.currentTimeMillis();
-        Thread.sleep(1520 - (et - st));
+        Thread.sleep(2010 - (et - startTime));
 
-        // After 1500 ms, all the traffic goes to 22222 && 22111.
+        // After 2000 ms, all the traffic goes to 22222 && 22111.
         int cnt = 0;
         for (int i = 0; i < 100; i++) {
             if (warmUpService.getPort() == 22111) {
