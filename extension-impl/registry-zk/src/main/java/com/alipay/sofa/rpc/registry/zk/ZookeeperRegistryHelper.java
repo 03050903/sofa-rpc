@@ -109,14 +109,13 @@ public class ZookeeperRegistryHelper {
             .append("?uniqueId=").append(consumerConfig.getUniqueId())
             .append(getKeyPairs("version", "1.0"))
             .append(getKeyPairs("pid", RpcRuntimeContext.PID))
-            //.append(getKeyPairs("randomPort", server.isRandomPort()))
             .append(getKeyPairs(RpcConstants.CONFIG_KEY_TIMEOUT, consumerConfig.getTimeout()))
             .append(getKeyPairs("id", consumerConfig.getId()))
             .append(getKeyPairs("crossLang", consumerConfig.getParameter("crossLang")))
             .append(getKeyPairs(RpcConstants.CONFIG_KEY_GENERIC, consumerConfig.isGeneric()))
             .append(getKeyPairs(RpcConstants.CONFIG_KEY_APP_NAME, consumerConfig.getAppName()))
             .append(getKeyPairs(RpcConstants.CONFIG_KEY_SERIALIZATION, consumerConfig.getSerialization()))
-            .append(getKeyPairs(ProviderInfoAttrs.ATTR_START_TIME, RpcRuntimeContext.START_TIME));
+            .append(getKeyPairs(ProviderInfoAttrs.ATTR_START_TIME, System.currentTimeMillis()));
         addCommonAttrs(sb);
         return sb.toString();
     }
@@ -176,7 +175,6 @@ public class ZookeeperRegistryHelper {
         throws UnsupportedEncodingException {
         String url = childData.getPath().substring(providerPath.length() + 1); // 去掉头部
         url = URLDecoder.decode(url, "UTF-8");
-        // byte[] data = childData.getData();
         ProviderInfo providerInfo = ProviderInfo.valueOf(url);
 
         processWarmUpWeight(providerInfo);
