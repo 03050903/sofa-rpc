@@ -50,7 +50,7 @@ public class WarmUpTest extends ActivelyDestroyTest {
             .setRef(new WarmUpServiceImpl(22222))
             .setServer(serverConfig)
             .setRegistry(registryConfig)
-            .setParameter(ProviderInfoAttrs.ATTR_WARMUP_TIME, "2000")
+            .setParameter(ProviderInfoAttrs.ATTR_WARMUP_TIME, "2500")
             .setParameter(ProviderInfoAttrs.ATTR_WARMUP_WEIGHT, "100")
             .setWeight(0);
 
@@ -80,13 +80,13 @@ public class WarmUpTest extends ActivelyDestroyTest {
             .setProtocol(RpcConstants.PROTOCOL_TYPE_BOLT);
         WarmUpService warmUpService = consumerConfig.refer();
 
-        // Before the 2000 ms, all the traffic goes to 22222.
+        // Before the 2500 ms, all the traffic goes to 22222.
         for (int i = 0; i < 10; i++) {
             Assert.assertEquals(22222, warmUpService.getPort());
         }
 
         long et = System.currentTimeMillis();
-        Thread.sleep(2010 - (et - startTime));
+        Thread.sleep(2510 - (et - startTime));
 
         // After 2000 ms, all the traffic goes to 22222 && 22111.
         int cnt = 0;
